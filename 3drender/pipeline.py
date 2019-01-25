@@ -1,18 +1,17 @@
 import ctypes
 from builtins import OSError, RuntimeError
-
+import sys
 import glfw
 import OpenGL.GL as gl
 import numpy as np
 
-
-from pyrr import vector3
+from pyrr import vector3, Quaternion
 from pyrr import matrix44
-from pyrr import quaternion
 from PIL import Image
 from pyrr.matrix44 import create_identity
 
-model_quat = None
+model_quat: Quaternion = Quaternion()
+last_rot_quat: Quaternion
 rotM = None
 modelM = None
 modelM_p = None
@@ -22,22 +21,18 @@ dx = 0.0
 dy = 0.0
 lastx = None
 lasty = None
-zoom = 80.0
+zoom = 40.0
 
 def run():
     global window
 
-
-
-
-    #   main event loop
+    ##   main event loop  ##
     while not glfw.window_should_close(window):
-        #   run gl code
         if glfw.get_key(window, glfw.KEY_Q) == glfw.PRESS:
             break
 
         render()
-        time = glfw.get_time()
+
         glfw.swap_buffers(window)
         glfw.poll_events()
 
@@ -47,18 +42,25 @@ def initGlfw():
     if not glfw.init():
         raise RuntimeError("glfw didn't initialise.")
 
+
+    glfw.window_hint(glfw.VISIBLE, gl.GL_TRUE)
     glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 4)
     glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 5)
     glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
     glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
+    glfw.window_hint(glfw.DOUBLEBUFFER, gl.GL_TRUE)
 
-    window = glfw.create_window(1080, 720, "3d Rendering", None, None)
+    window = glfw.create_window(1680, 1050, "3d Rendering", None, None)
 
     if not window:
         glfw.terminate()
         raise RuntimeError("glfw could not create a window")
 
+    # cont = glXGetCurrentContext()
+    # glXImportContextEXT()
+
     glfw.make_context_current(window)
+    glfw.swap_interval(1)
     glfw.set_window_size_callback(window, callbackResize)
     glfw.set_mouse_button_callback(window, callbackMouseButton)
     glfw.set_scroll_callback(window, callbackScroll)
@@ -72,25 +74,24 @@ def initGlfw():
 
 
 def render():
+
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-
     gl.glDrawElements(gl.GL_TRIANGLES, 36, gl.GL_UNSIGNED_INT, None)
 
 def initGl():
     global program, modelM_p, viewM_p, projM_p
-    # gl.glEnable(gl.GL_TEXTURE)
+
+
+    gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     gl.glEnable(gl.GL_DEPTH_TEST)
     gl.glDepthFunc(gl.GL_LESS)
     gl.glEnable(gl.GL_BLEND)
     gl.glClearColor(0.2, 0.3, 0.4, 1.0)
 
 
-    # image_file = "asset/IMG-20190123-WA0006.jpg"
     image_file = "asset/evaperspectivetool.jpg"
     image = Image.open(image_file, "r")
-
-
 
     voa = gl.glGenVertexArrays(1)
     gl.glBindVertexArray(voa)
@@ -104,10 +105,9 @@ def initGl():
     tex = gl.glGenTextures(1)
     gl.glBindTexture(gl.GL_TEXTURE_2D, tex)
 
+    ## LINK / USE pipeline program  ##
     linkProgram(program)
     gl.glUseProgram(program)
-
-
 
 
     position_p = gl.glGetAttribLocation(program, "position")
@@ -147,7 +147,7 @@ def sendData(vertex_buffer, indices):
     global modelM_p
     global modelM
     global zoom
-    global model_quat
+    global model_quat, last_rot_quat
 
     eye = vector3.create(0.0, 2.0, 6.0, dtype=np.float32)
     target = vector3.create(0.0, 0.0, 0.0, dtype=np.float32)
@@ -166,7 +166,9 @@ def sendData(vertex_buffer, indices):
 
     id = matrix44.create_identity()
 
-    model_quat = quaternion.create_from_matrix(id)
+
+    model_quat = Quaternion.from_matrix(id)
+    last_rot_quat = Quaternion.from_matrix(id)
 
     modelM = id
 
@@ -174,10 +176,8 @@ def sendData(vertex_buffer, indices):
     gl.glUniformMatrix4fv(viewM_p, 1, gl.GL_FALSE, viewM)
     gl.glUniformMatrix4fv(projM_p, 1, gl.GL_FALSE, projM)
 
-def printQ(quat: quaternion):
-    th = quaternion.rotation_angle(quat)
-    axis = quaternion.rotation_axis(quat)
-    print("qid: {0}\ntheta: {1}\nqaxis: {2}\n".format(quat, th, axis))
+def printQ(quat: Quaternion):
+    print("qid: {0}\ntheta: {1}\nqaxis: {2}\n".format(quat, quat.angle, quat.axis))
 
 def updateModelMatrix(matrix):
     global modelM_p
@@ -224,30 +224,32 @@ def callbackResize(window, width, height):
     gl.glViewport(0, 0, width, height)
 
 def callbackMousePos(window, xpos, ypos):
-    global modelM, model_quat, lastx, lasty, dx, dy, rotM
-    q = quaternion.create_from_matrix(modelM)
+    global modelM, model_quat, last_rot_quat, lastx, lasty, dx, dy, rotM
     rad = 3.14159 / 180.0
 
     if lastx == None or lasty == None:
+        lastx, lasty = xpos, ypos
+        model_quat = last_rot_quat
+        printQ(model_quat)
+        printQ(last_rot_quat)
+
         return
     elif dx == None or dy == None:
-        lastx, lasty = xpos, ypos
         dx, dy = 0.0, 0.0
 
-    dx = (dx + (lastx - xpos)) % 360
-    dy = (dy + (lasty - ypos)) %360
-    lastx = xpos
-    lasty = ypos
+    dx = (lastx - xpos)
+    dy = (lasty - ypos)
+
 
     # print("({0},{1} dx: {2}, dy: {3})".format(xpos,ypos,dx,dy))
 
-    qy = quaternion.create_from_eulers(vector3.create(dy * rad, dx * rad, 0, dtype=np.float32))
-    qnon = quaternion.create_from_eulers(vector3.create(0, 0, 0, dtype=np.float32))
-    printQ(model_quat)
-    printQ(qy)
-    printQ(quaternion.normalise(model_quat-qy))
+    qy = Quaternion.from_eulers(vector3.create(dy * rad, dx * rad, 0, dtype=np.float32))
 
-    rotM = matrix44.create_from_quaternion(quaternion.normalise(model_quat+qy))
+    res_quat = qy * model_quat
+    last_rot_quat = res_quat.normalised
+
+
+    rotM = matrix44.create_from_quaternion(last_rot_quat)
     modelM = rotM
     #  conjugate
     updateModelMatrix(modelM)
@@ -258,10 +260,11 @@ def callbackMousePos(window, xpos, ypos):
 def callbackMouseButton(window, button, action, mods):
     global lastx, lasty, xpos, ypos, dx, dy
     if button == 0 and action == glfw.PRESS:
-        lastx, lasty = 0.0, 0.0
         glfw.set_cursor_pos_callback(window, callbackMousePos)
 
     if button == 0 and action == glfw.RELEASE:
+        print("({0},{1} dx: {2}, dy: {3})".format(lastx, lasty, dx,dy))
+
         lastx, lasty, dx, dy = None, None, None, None
         glfw.set_cursor_pos_callback(window, lambda *_: False)
 
