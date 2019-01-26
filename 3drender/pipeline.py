@@ -13,6 +13,9 @@ from pyrr import matrix44
 from PIL import Image
 from pyrr.matrix44 import create_identity
 
+window = None
+monitor = None
+
 model_quat: Quaternion = Quaternion()
 last_rot_quat: Quaternion
 rotM = None
@@ -27,29 +30,33 @@ lasty = None
 zoom = 40.0
 
 def run():
-    global window
+    global monitor, window
 
     ##   main event loop  ##
     while not glfw.window_should_close(window):
+        errorRun()
         if glfw.get_key(window, glfw.KEY_Q) == glfw.PRESS:
             break
 
         render()
 
+        glfw.make_context_current(window)
         glfw.swap_buffers(window)
         glfw.poll_events()
 
+    modes = glfw.get_video_modes(monitor)
+    glfw.set_window_size(window, modes[-1].size.width, modes[-1].size.height)
     glfw.terminate()
 
 def initGlfw():
+    global monitor, window
+
     if not glfw.init():
         raise RuntimeError("glfw didn't initialise.")
-
 
     monitor = glfw.get_primary_monitor()
     video_modes = glfw.get_video_modes(monitor)
     physical_size = glfw.get_monitor_physical_size(monitor)
-    print(physical_size)
     vmode = video_modes[-1]
     print(vmode)
 
@@ -58,8 +65,11 @@ def initGlfw():
     glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 5)
     glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
     glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
-    glfw.window_hint(glfw.REFRESH_RATE, vmode.refresh_rate)
+    glfw.window_hint(glfw.REFRESH_RATE, 60)
     glfw.window_hint(glfw.DOUBLEBUFFER, gl.GL_TRUE)
+    glfw.window_hint(glfw.CLIENT_API, glfw.OPENGL_API)
+    glfw.window_hint(glfw.CONTEXT_CREATION_API, glfw.NATIVE_CONTEXT_API)
+    glfw.window_hint(glfw.OPENGL_DEBUG_CONTEXT, gl.GL_TRUE)
 
     window = glfw.create_window(vmode.size.width, vmode.size.height, "3d Rendering", monitor, None)
 
@@ -67,19 +77,33 @@ def initGlfw():
         glfw.terminate()
         raise RuntimeError("glfw could not create a window")
 
+    glfw.make_context_current(window)
+
+
+    glfw.set_window_pos(window, 0, 0)
+    callbackResize(window, vmode.size.width, vmode.size.height)
+
+
+
     # cont = glXGetCurrentContext()
     # glXImportContextEXT()
 
-    glfw.make_context_current(window)
     glfw.swap_interval(1)
-    glfw.set_window_size_callback(window, callbackResize)
+    # glfw.set_window_size_callback(window, callbackResize)
     glfw.set_mouse_button_callback(window, callbackMouseButton)
     glfw.set_scroll_callback(window, callbackScroll)
 
+    size = glfw.get_framebuffer_size(window)
 
+    print("framebuffer: {0}".format(size))
     #   debug info
     print("glfw ver: {0}".format(glfw.get_version_string().decode()))
     print("glsl ver: {0}".format(gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION).decode()))
+
+    ##   redundant nonsense
+    glfw.show_window(window)
+    glfw.focus_window(window)
+
 
     return window
 
@@ -92,7 +116,6 @@ def render():
 
 def initGl():
     global program, modelM_p, viewM_p, projM_p
-
 
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
     gl.glEnable(gl.GL_DEPTH_TEST)
@@ -286,6 +309,11 @@ def callbackScroll(window, xoffset, yoffset):
     print("zoom: ", zoom)
 
 
+def errorRun():
+    if not gl.glGetError() == gl.GL_NO_ERROR:
+        raise RuntimeError("Gl errors")
 
 window = initGlfw()
 program = gl.glCreateProgram()
+
+
