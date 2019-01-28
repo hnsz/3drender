@@ -58,7 +58,7 @@ def initGlfw():
     glfw.window_hint(glfw.DOUBLEBUFFER, gl.GL_TRUE)
 
 
-    window = glfw.create_window(720, 720, "3d Rendering", None, None)
+    window = glfw.create_window(1080, 720, "3d Rendering", None, None)
     glfw.set_window_pos(window, 1650-720, 0)
 
     if not window:
@@ -125,9 +125,9 @@ def initGl():
     gl.glVertexAttribPointer(position_p, 4, gl.GL_FLOAT, gl.GL_FALSE, 40, ctypes.c_void_p(0))
     gl.glEnableVertexAttribArray(position_p)
 
-    color_p = gl.glGetAttribLocation(program, "color")
-    gl.glVertexAttribPointer(color_p, 4, gl.GL_FLOAT, gl.GL_FALSE, 40,ctypes.c_void_p(16))
-    gl.glEnableVertexAttribArray(color_p)
+    # color_p = gl.glGetAttribLocation(program, "color")
+    # gl.glVertexAttribPointer(color_p, 4, gl.GL_FLOAT, gl.GL_FALSE, 40,ctypes.c_void_p(16))
+    # gl.glEnableVertexAttribArray(color_p)
 
     texcoord_p = gl.glGetAttribLocation(program, "texCoord")
     gl.glVertexAttribPointer(texcoord_p, 2, gl.GL_FLOAT, gl.GL_FALSE, 40, ctypes.c_void_p(32))
