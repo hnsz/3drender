@@ -32,6 +32,13 @@ def run():
             break
 
         render()
+        time = glfw.get_time()
+        speed = 100.0
+        theta = (time % 360.0) * np.pi/180.0 * speed
+
+
+
+
 
         glfw.swap_buffers(window)
         glfw.poll_events()
@@ -50,7 +57,9 @@ def initGlfw():
     glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
     glfw.window_hint(glfw.DOUBLEBUFFER, gl.GL_TRUE)
 
-    window = glfw.create_window(1680, 1050, "3d Rendering", None, None)
+
+    window = glfw.create_window(720, 720, "3d Rendering", None, None)
+    glfw.set_window_pos(window, 1650-720, 0)
 
     if not window:
         glfw.terminate()
@@ -84,11 +93,13 @@ def initGl():
 
 
     gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-    gl.glEnable(gl.GL_DEPTH_TEST)
-    gl.glDepthFunc(gl.GL_LESS)
+    # gl.glEnable(gl.GL_DEPTH_TEST)
+    # gl.glDepthFunc(gl.GL_LESS)
     gl.glEnable(gl.GL_BLEND)
     gl.glClearColor(0.2, 0.3, 0.4, 1.0)
 
+    # gl.glEnable(gl.GL_CULL_FACE)
+    # gl.glCullFace(gl.GL_BACK)
 
     image_file = "asset/evaperspectivetool.jpg"
     image = Image.open(image_file, "r")
@@ -137,6 +148,7 @@ def initGl():
 
     img_data = np.array(image, dtype=np.uint8)
     gl.glTexImage2D(gl.GL_TEXTURE_2D, 0, gl.GL_RG8, 1200, 1599, 0, gl.GL_RGB, gl.GL_UNSIGNED_BYTE, img_data)
+
 
 
 
@@ -230,10 +242,9 @@ def callbackMousePos(window, xpos, ypos):
     if lastx == None or lasty == None:
         lastx, lasty = xpos, ypos
         model_quat = last_rot_quat
-        printQ(model_quat)
-        printQ(last_rot_quat)
 
         return
+
     elif dx == None or dy == None:
         dx, dy = 0.0, 0.0
 
@@ -247,7 +258,7 @@ def callbackMousePos(window, xpos, ypos):
 
     res_quat = qy * model_quat
     last_rot_quat = res_quat.normalised
-
+    printQ(last_rot_quat)
 
     rotM = matrix44.create_from_quaternion(last_rot_quat)
     modelM = rotM
@@ -266,7 +277,7 @@ def callbackMouseButton(window, button, action, mods):
         print("({0},{1} dx: {2}, dy: {3})".format(lastx, lasty, dx,dy))
 
         lastx, lasty, dx, dy = None, None, None, None
-        glfw.set_cursor_pos_callback(window, lambda *_: False)
+        glfw.set_cursor_pos_callback(window, lambda *_: None)
 
 
 def callbackScroll(window, xoffset, yoffset):
