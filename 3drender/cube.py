@@ -5,7 +5,6 @@ from PIL import Image
 
 class Cube:
     clearColor = 0.2, 0.3, 0.4, 1.0
-    enable = [GL_BLEND]
     image_file = "asset/evaperspectivetool.jpg"
     texture = None
     vertex_buffer = None
@@ -14,6 +13,19 @@ class Cube:
 
     def __init__(self):
         self.initData()
+
+    def draw(self):
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, None)
+
+    def settings(self):
+        glEnable(GL_BLEND)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+
+        glEnable(GL_DEPTH_TEST)
+        glDepthFunc(GL_LESS)
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
+
 
 
     def setupBuffers(self):

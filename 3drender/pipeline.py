@@ -46,7 +46,7 @@ class Pipeline:
         glfw.window_hint(glfw.DOUBLEBUFFER, gl.GL_TRUE)
 
         window = glfw.create_window(1080, 720, "3d Rendering", None, None)
-        glfw.set_window_pos(window, 1650 - 720, 0)
+        glfw.set_window_pos(window, 0, 0)
 
         if not window:
             glfw.terminate()
@@ -68,20 +68,11 @@ class Pipeline:
         return window
 
     def render(self):
+        gl.glClearColor(*self.shape.clearColor)
         gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-        gl.glBlendFunc(gl.GL_SRC_ALPHA, gl.GL_ONE_MINUS_SRC_ALPHA)
-        gl.glDrawElements(gl.GL_TRIANGLES, 36, gl.GL_UNSIGNED_INT, None)
+        self.shape.draw()
 
     def initGl(self):
-        gl.glClear(gl.GL_COLOR_BUFFER_BIT | gl.GL_DEPTH_BUFFER_BIT)
-        # gl.glEnable(gl.GL_DEPTH_TEST)
-        # gl.glDepthFunc(gl.GL_LESS)
-        gl.glEnable(gl.GL_BLEND)
-        gl.glClearColor(*self.shape.clearColor)
-
-        # gl.glEnable(gl.GL_CULL_FACE)
-        # gl.glCullFace(gl.GL_BACK)
-
         voa = gl.glGenVertexArrays(1)
         gl.glBindVertexArray(voa)
 
@@ -99,6 +90,7 @@ class Pipeline:
         gl.glUseProgram(self.program)
 
         self.shape.setupBuffers()
+        self.shape.settings()
 
     def sendData(self):
         self.shape.sendData()
