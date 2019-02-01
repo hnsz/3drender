@@ -16,7 +16,6 @@ class Cube:
         self.initData()
 
 
-
     def setupBuffers(self):
 
         glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, 40, ctypes.c_void_p(0))
@@ -27,7 +26,7 @@ class Cube:
         glEnableVertexAttribArray(1)
         glEnableVertexAttribArray(2)
 
-        glUniform1i(0, 0)
+        glUniform1i(0, 0)   # texture
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
@@ -73,5 +72,5 @@ class Cube:
 
         ], dtype=np.uint32)
 
-
         self.texture = np.array(Image.open(self.image_file, "r"), dtype=np.uint8)
+

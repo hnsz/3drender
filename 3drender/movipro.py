@@ -6,6 +6,7 @@ from OpenGL.GL import *
 
 class MoViPro:
     zoom = 60
+    dscroll = 1
     trans = None
     view = None
     proj = None
@@ -13,15 +14,22 @@ class MoViPro:
     lasty = None
 
 
-    def __init__(self):
-        eye = vector3.create(0.0, 2.0, 6.0, dtype=np.float32)
-        target = vector3.create(0.0, 0.0, 0.0, dtype=np.float32)
-        up = vector3.create(0.0, 1.0, 0.0, dtype=np.float32)
-        self.last_rot_quat = Quaternion.from_x_rotation(0.1)
 
+    def __init__(self):
+        self.last_rot_quat = Quaternion.from_x_rotation(0.1)
         self.trans = matrix44.create_from_translation(vector3.create(2.0, 0.0, 0.0, dtype=np.float32))
         self.model = matrix44.create_identity()
-        self.view = matrix44.create_look_at(eye, target, up)
+        self.eye = vector3.create(0.0, 2.0, 6.0, dtype=np.float32)
+        self.target = vector3.create(0.0, 0.0, 0.0, dtype=np.float32)
+        self.up = vector3.create(0.0, 1.0, 0.0, dtype=np.float32)
+        self.updateView()
+        self.updateProj()
+
+
+    def updateView(s):
+        s.view = matrix44.create_look_at(s.eye, s.target, s.up)
+
+    def updateProj(self):
         self.proj = matrix44.create_perspective_projection(self.zoom, 1080.0 / 720.0, 0.1, 80.0, dtype=np.float32)
 
     def sendData(self):
@@ -46,7 +54,6 @@ class MoViPro:
 
         qy = Quaternion.from_eulers(vector3.create(dy * rad, dx * rad, 0, dtype=np.float32))
 
-
         res_quat = qy * self.model_quat
         self.last_rot_quat = res_quat.normalised
 
@@ -61,3 +68,12 @@ class MoViPro:
         if button == 0 and action == glfw.RELEASE:
             self.lastx, self.lasty, self.dx, self.dy = None, None, None, None
             glfw.set_cursor_pos_callback(window, lambda *_: None)
+
+    def callbackScroll(self, window, xoffset, yoffset):
+        d = 2.0
+        zoom = self.zoom + d * yoffset
+        if zoom < 180.0 - d and zoom > d:
+            self.zoom = zoom
+
+        self.updateProj()
+        self.sendData()

@@ -59,7 +59,7 @@ class Pipeline:
         glfw.swap_interval(1)
         glfw.set_window_size_callback(window, self.callbackResize)
         glfw.set_mouse_button_callback(window, self.mvp.callbackMouseButton)
-        # glfw.set_scroll_callback(window, self.mvp.callbackScroll)
+        glfw.set_scroll_callback(window, self.mvp.callbackScroll)
 
         #   debug info
         print("glfw ver: {0}".format(glfw.get_version_string().decode()))
@@ -134,7 +134,6 @@ class Pipeline:
             link_error = gl.glGetProgramInfoLog(program)
             raise RuntimeError(link_error)
 
-        # detach shaders
         for shdr in gl.glGetAttachedShaders(program):
             gl.glDetachShader(program, shdr)
             gl.glDeleteShader(shdr)
