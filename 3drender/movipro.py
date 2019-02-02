@@ -1,8 +1,10 @@
-from pyrr import matrix44, vector3, Quaternion, quaternion, vector4, Vector3, quaternion, Vector4
+from pyrr import matrix44, vector3, vector4
 import numpy as np
-import glfw
+from glfw import *
 from OpenGL.GL import *
-from pyrr.quaternion import rotation_axis
+from quaternion import *
+import math
+from quaternion.numpy_quaternion import quaternion
 
 
 class MoViPro:
@@ -13,11 +15,13 @@ class MoViPro:
     proj = None
     lastx = None
     lasty = None
-
+    displayWidth, displayHeight = 1080, 720
+    centerPoint = 1080/2, 720/2
+    qstart = None
 
 
     def __init__(self):
-        self.last_rot_quat = Quaternion.from_x_rotation(0)
+        self.last_rot_quat = from_euler_angles([0, 0, 0])
         self.trans = matrix44.create_from_translation(vector3.create(2.0, 0.0, 0.0, dtype=np.float32))
         self.model = matrix44.create_identity()
         self.eye = vector3.create(0.0, 1.0, 6.0, dtype=np.float32)
@@ -27,11 +31,12 @@ class MoViPro:
         self.updateProj()
 
 
+
     def updateView(s):
         s.view = matrix44.create_look_at(s.eye, s.target, s.up)
 
     def updateProj(self):
-        self.proj = matrix44.create_perspective_projection(self.zoom, 1080.0 / 720.0, 0.1, 80.0, dtype=np.float32)
+        self.proj = matrix44.create_perspective_projection(self.zoom, self.displayWidth / self.displayHeight, 0.1, 80.0, dtype=np.float32)
 
     def sendData(self):
         glUniformMatrix4fv(1, 1, GL_FALSE, self.model)
@@ -41,11 +46,17 @@ class MoViPro:
 
     def callbackMousePos(self, window, xpos, ypos):
         rad = 3.14159 / 180.0
+        w, h = get_window_size(window)
+        cw, ch = w / 2, h / 2
+        co, si = (xpos-cw)/cw, (ypos-ch)/ch
+        thy, thz = math.acos(co), math.asin(si)
 
-
+        # q = quaternion(1, thy, thz, 0)
+        # qv = as_rotation_vector(q)
+        q = from_spherical_coords([si, co])
         if self.lastx == None or self.lasty == None:
             self.lastx, self.lasty = xpos, ypos
-            self.model_quat = self.last_rot_quat
+            self.qstart = q
             return
 
         if self.d == 0:
@@ -60,37 +71,30 @@ class MoViPro:
         dx = (self.lastx - xpos)
         dy = (self.lasty - ypos)
 
-        qy = Quaternion.from_eulers(vector3.create(dy * rad, dx * rad, 0, dtype=np.float32))
 
+        # print("({:+.2f})({:+.2f}) ({:+.2f})({:+.2f})".format(co, si, math.acos(co), math.asin(si)))
 
+        startv = as_rotation_vector(self.qstart)
 
+        t = from_spherical_coords([si, co])
 
-
-        res_quat = qy * self.model_quat
-        self.last_rot_quat = res_quat.normalised
-
-
-
-        v = np.array([1, 0, 0, 1])
-        c = np.array([.7, .7, .7, 1.0])
-        cross = vector4.create(*self.last_rot_quat.cross(v))
-        # cross = np.array(vector4.normalize(cross) )
-
-
-
-        print(cross)
+        # print(np.cross(as_spinor_array(q), as_spinor_array(self.qstart)))
 
 
         # print("x: {:.1f},  y: {:.1f}, z {:.1f}; ".format(*dott))
 
-        # glBufferSubData(GL_ARRAY_BUFFER, 4672 +(4)*16 , 16, np.array(-1 * cross, dtype=np.float32))
-        glBufferSubData(GL_ARRAY_BUFFER, 4672 +(6)*16 , 16, np.array(cross, dtype=np.float32))
-        self.model = matrix44.create_from_quaternion(self.last_rot_quat)
+        rot3 = as_rotation_matrix(t)
+        B = np.mat('0;0;0')
+        C = np.mat('0 0 0')
+        D = np.mat('1')
+        rot4 = np.bmat([[rot3, B], [C, D]])
+        self.model = rot4
+        print(self.model)
 
         self.sendData()
 
     def callbackMouseButton(self, window, button, action, mods):
-        if action == glfw.PRESS:
+        if action == PRESS:
             if button == 0:
                 self.d = 0
             elif button == 1:
@@ -98,11 +102,11 @@ class MoViPro:
             else:
                 return
 
-            glfw.set_cursor_pos_callback(window, self.callbackMousePos)
+            set_cursor_pos_callback(window, self.callbackMousePos)
 
-        if action == glfw.RELEASE and (button == 0 or button == 1):
+        if action == RELEASE and (button == 0 or button == 1):
             self.lastx, self.lasty, self.dx, self.dy = None, None, None, None
-            glfw.set_cursor_pos_callback(window, lambda *_: None)
+            set_cursor_pos_callback(window, lambda *_: None)
 
 
     def callbackScroll(self, window, xoffset, yoffset):
