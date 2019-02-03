@@ -5,7 +5,7 @@ from PIL import Image
 
 class Cube:
     clearColor = 0.2, 0.3, 0.4, 1.0
-    image_file = "asset/evaperspectivetool.jpg"
+    image_file = "assets/evaperspectivetool.jpg"
     texture = None
     vertex_buffer = None
     indices = None

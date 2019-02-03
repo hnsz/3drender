@@ -5,6 +5,7 @@ import glfw
 import OpenGL.GL as gl
 import numpy as np
 from movipro import MoViPro
+from pixelbufferout import PixelBufferOut
 
 
 class Pipeline:
@@ -12,8 +13,11 @@ class Pipeline:
     def __init__(self, shape):
         self.shape = shape
         self.mvp = MoViPro()
+        self.width, self.height = 1280, 1024
         self.window = self.initGlfw()
+        self.pbo = PixelBufferOut()
         self.program = gl.glCreateProgram()
+
 
     def run(self):
         window = self.window
@@ -29,9 +33,12 @@ class Pipeline:
             theta = (time % 360.0) * np.pi / 180.0 * speed
 
             glfw.swap_buffers(window)
+
+
             glfw.poll_events()
 
         glfw.terminate()
+
 
     def initGlfw(self):
 
@@ -45,7 +52,7 @@ class Pipeline:
         glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
         glfw.window_hint(glfw.DOUBLEBUFFER, gl.GL_TRUE)
 
-        window = glfw.create_window(1080, 720, "3d Rendering", None, None)
+        window = glfw.create_window(self.width, self.height, "3d Rendering", None, None)
         glfw.set_window_pos(window, 0, 0)
 
         if not window:
@@ -91,6 +98,7 @@ class Pipeline:
 
         self.shape.setupBuffers()
         self.shape.settings()
+
 
     def sendData(self):
         self.shape.sendData()
