@@ -19,6 +19,7 @@ class MoViPro:
 
 
 
+
     def __init__(self):
         self.last_rot_quat = Quaternion.from_x_rotation(0)
         self.trans = matrix44.create_from_translation(vector3.create(2.0, 0.0, 0.0, dtype=np.float32))
