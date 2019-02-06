@@ -1,3 +1,8 @@
+import math
+import time
+from queue import Queue
+from threading import *
+
 from datetime import datetime
 import os
 from OpenGL.GL import *
@@ -15,8 +20,11 @@ class FrameGrab:
     fileWriter = None
 
     def __init__(s):
-        _, _, s.width, s.height = glGetIntegerv(GL_VIEWPORT)
-        s.pixelformat = {'gl': GL_RGBA, 'image': 'RGBA', 'size': 4}
+        # _, _, s.width, s.height = glGetIntegerv(GL_VIEWPORT)
+        s.width = 1280
+        s.height = 960
+
+        s.pixelformat = {'gl': GL_RGB, 'image': 'RGB', 'size': 3}
         s.bufferSize = s.width * s.height * s.pixelformat['size']
         s.fileWriter = FileWriter(s.destDir)
 
@@ -39,13 +47,14 @@ class FrameGrab:
         glBindBuffer(GL_PIXEL_PACK_BUFFER, s.pbo[s.nextIdx])
         bufferdata = glMapBuffer(GL_PIXEL_PACK_BUFFER, GL_READ_ONLY)
 
-        image = Image.frombuffer(s.pixelformat["image"], (s.width, s.height), ctypes.string_at(bufferdata, s.bufferSize), 'raw',s.pixelformat["image"], 0, 1)
+        image = Image.frombuffer(s.pixelformat["image"], (s.width, s.height), ctypes.string_at(bufferdata, s.bufferSize), 'raw', s.pixelformat['image'], 0, 1)
         image = image.transpose(Image.FLIP_TOP_BOTTOM)
 
         glUnmapBuffer(GL_PIXEL_PACK_BUFFER)
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0)
 
-        return image
+        s.fileWriter.writeImage(image)
+
 
     def toVideo(s):
         return
@@ -59,8 +68,8 @@ class FrameGrab:
 
         s.pbo = pbo
 
-    def save(s, img: Image):
-        s.fileWriter.writeImage(img)
+    def finish(s):
+        s.fileWriter.finish()
 
 
 class FileWriter:
@@ -76,6 +85,11 @@ class FileWriter:
         s.dt = datetime.now()
         s.nr = 0
         s.dest = s.createDestDir()
+        s.q = Queue()
+        s.c = Condition()
+        s.e = Event()
+        s.consumer = Consumer(s.q, s.c, s.e)
+        s.consumer.start()
 
     def createDestDir(s):
         capture = os.path.join(s.basedir, "capture{:%m%d}".format(s.dt))
@@ -94,4 +108,51 @@ class FileWriter:
 
     def writeImage(s, img: Image):
         s.count += 1
-        img.save(os.path.join(s.dest, s.name.format(s.count, s.ext)), format=s.ext)
+        filename = os.path.join(s.dest, s.name.format(s.count, s.ext))
+        s.q.put_nowait((img, filename, s.ext))
+        s.c.acquire()
+        s.c.notify()
+        s.c.release()
+
+    def finish(s):
+        s.e.set()
+        s.q.join()
+        s.q.put_nowait((None, None, None))
+        s.c.acquire()
+        s.c.notify()
+        s.c.release()
+        s.consumer.join()
+
+
+
+class Consumer(Thread):
+
+    def __init__(s, q, c, e):
+        s.q = q
+        s.c = c
+        super(Consumer, s).__init__()
+        s.finish = e
+        s.finish.clear()
+
+
+    def run(s):
+        while True:
+            if s.finish.isSet():
+                pass
+            elif s.q.qsize() > 0:
+                sleeptime = .5 / math.exp(s.q.qsize()/50)
+                time.sleep(sleeptime)
+
+            print("queue size: {:d}".format(s.q.qsize()))
+            if not s.q.empty():
+                img, filename, ext = s.q.get()
+                if not img:
+                    break
+                else:
+                    img.save(filename, format=ext)
+                    s.q.task_done()
+            else:
+                s.c.acquire()
+                s.c.wait()
+                s.c.release()
+

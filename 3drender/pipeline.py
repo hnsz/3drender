@@ -11,7 +11,7 @@ class Pipeline:
     def __init__(s, shape):
         s.shape = shape
         s.mvp = MoViPro()
-        s.width, s.height = 1280, 1024
+        s.width, s.height = 1280, 960
         s.window = s.initGlfw()
         s.program = gl.glCreateProgram()
         s.frameGrab = FrameGrab()
@@ -26,12 +26,11 @@ class Pipeline:
             s.render()
 
             glfw.swap_buffers(window)
-            img = s.frameGrab.create()
-            s.frameGrab.save(img)
+            s.frameGrab.create()
             glfw.poll_events()
 
         glfw.terminate()
-
+        s.frameGrab.finish()
 
     def initGlfw(s):
 
@@ -140,7 +139,11 @@ class Pipeline:
         info["glfw ver:"] = glfw.get_version_string()
         info["glsl ver:"] = gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
         info["fb size"] = glfw.get_framebuffer_size(window)
-
+        info["window size"] = glfw.get_window_size(window)
+        mon = glfw.get_primary_monitor()
+        info["monitor physical size"] = glfw.get_monitor_physical_size(mon)
+        info["monitor pos"] = glfw.get_monitor_pos(mon)
+        info["display mode"] = glfw.get_video_mode(mon)
         for k in info.keys():
             print("{0}, {1}".format(k, info[k]))
 

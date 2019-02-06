@@ -82,7 +82,7 @@ class MoViPro:
 
 
 
-        print(cross)
+        # print(cross)
 
 
         # print("x: {:.1f},  y: {:.1f}, z {:.1f}; ".format(*dott))
