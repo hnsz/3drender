@@ -3,7 +3,7 @@ import numpy as np
 import quaternion as npq
 from glfw import *
 from OpenGL.GL import *
-import math
+
 
 
 

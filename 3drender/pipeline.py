@@ -52,8 +52,6 @@ class Pipeline:
             glfw.terminate()
             raise RuntimeError("glfw could not create a window")
 
-        # cont = glXGetCurrentContext()
-        # glXImportContextEXT()
 
         glfw.make_context_current(window)
         glfw.set_window_size_callback(window, s.callbackResize)

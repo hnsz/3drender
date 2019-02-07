@@ -20,7 +20,6 @@ class FrameGrab:
     fileWriter = None
 
     def __init__(s):
-        # _, _, s.width, s.height = glGetIntegerv(GL_VIEWPORT)
         s.width = 1280
         s.height = 960
 
