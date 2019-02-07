@@ -1,10 +1,9 @@
-from pyrr import matrix44, vector3, Quaternion, quaternion, vector4, Vector3, quaternion, Vector4
+from pyrr.matrix44 import create_perspective_projection
 import numpy as np
-import glfw
+import quaternion as npq
+from glfw import *
 from OpenGL.GL import *
-from pyrr.quaternion import rotation_axis
-from pytransform3d import *
-
+import math
 
 
 
@@ -16,104 +15,111 @@ class MoViPro:
     proj = None
     lastx = None
     lasty = None
+    width, height = 1080, 720
+    centerPoint = width/2, height/2
+    q0 = None
+    qcurrent = None
+    qlast = None
 
 
+    def __init__(s_):
+        s_.qcurrent = npq.from_spherical_coords(np.array([0, 0]))
+        s_.trans = np.array([1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1])
+        s_.model = np.identity(4)
+        s_.eye = np.array([0.0, 1.0, 6.0], dtype=np.float32)
+        s_.target = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+        s_.up = np.array([0.0, 1.0, 0.0], dtype=np.float32)
+        s_.updateModel(s_.qcurrent)
+        s_.updateView()
+        s_.updateProj()
+
+    def updateView(s_):
+        s_.view= s_.constructView(s_.eye, s_.target, s_.up)
+
+    def constructView(s_, eye, target, up):
+        def normalise(v):
+            norm = np.linalg.norm(v)
+            return v / norm if norm else v
+
+        zaxis = normalise(eye - target)
+        xaxis = normalise(np.cross(up, zaxis))
+        yaxis = np.cross(zaxis, xaxis)
+        dots = [-eye @ xaxis, -eye @ yaxis, -eye @ zaxis, 1]
+
+        part = np.vstack((xaxis, yaxis, zaxis, [0,0,0]))
+        view = np.vstack((part.transpose(), dots))
+        return np.array(view, dtype=np.float32)
 
 
-    def __init__(self):
-        self.last_rot_quat = Quaternion.from_x_rotation(0)
-        self.trans = matrix44.create_from_translation(vector3.create(2.0, 0.0, 0.0, dtype=np.float32))
-        self.model = matrix44.create_identity()
-        self.eye = vector3.create(0.0, 1.0, 6.0, dtype=np.float32)
-        self.target = vector3.create(0.0, 0.0, 0.0, dtype=np.float32)
-        self.up = vector3.create(0.0, 10.0, 0.0, dtype=np.float32)
-        self.updateView()
-        self.updateProj()
+    def updateProj(s_):
+        s_.proj = create_perspective_projection(s_.zoom, s_.width / s_.height, 0.1, 80.0, dtype=np.float32)
+
+    def updateModel(s_, q):
+        m3 = npq.as_rotation_matrix(q)
+        B = np.mat('0;0;0')
+        C = np.mat('0 0 0')
+        D = np.mat('1')
+        s_.model = np.bmat([[m3, B], [C, D]])
+
+    def sendData(s_):
+        glUniformMatrix4fv(1, 1, GL_FALSE, s_.model)
+        glUniformMatrix4fv(2, 1, GL_FALSE, s_.view)
+        glUniformMatrix4fv(3, 1, GL_FALSE, s_.proj)
 
 
-    def updateView(s):
-        s.view = matrix44.create_look_at(s.eye, s.target, s.up)
-
-    def updateProj(self):
-        self.proj = matrix44.create_perspective_projection(self.zoom, 1080.0 / 720.0, 0.1, 80.0, dtype=np.float32)
-
-    def sendData(self):
-        glUniformMatrix4fv(1, 1, GL_FALSE, self.model)
-        glUniformMatrix4fv(2, 1, GL_FALSE, self.view)
-        glUniformMatrix4fv(3, 1, GL_FALSE, self.proj)
-
-
-    def callbackMousePos(self, window, xpos, ypos):
+    def callbackMousePos(s_, window, xpos, ypos):
         rad = 3.14159 / 180.0
+        w, h = get_window_size(window)
+        cw, ch = w / 2, h / 2
+        co, si = (xpos-cw)/cw, (ypos-ch)/ch
 
-
-        if self.lastx == None or self.lasty == None:
-            self.lastx, self.lasty = xpos, ypos
-            self.model_quat = self.last_rot_quat
+        if s_.lastx == None or s_.lasty == None:
+            s_.lastx, s_.lasty = xpos, ypos
             return
 
-        if self.d == 0:
-            dx = (self.lastx - xpos)
+        if s_.d == 0:
+            dx = (s_.lastx - xpos)
         else:
             dx = 0
-        if self.d == 1:
-            dy = (self.lasty - ypos)
+        if s_.d == 1:
+            dy = (s_.lasty - ypos)
         else:
             dy = 0
 
-        dx = (self.lastx - xpos)
-        dy = (self.lasty - ypos)
+        dx = (s_.lastx - xpos)
+        dy = (s_.lasty - ypos)
 
-        qy = Quaternion.from_eulers(vector3.create(dy * rad, dx * rad, 0, dtype=np.float32))
-
-
-
-
-
-        res_quat = qy * self.model_quat
-        self.last_rot_quat = res_quat.normalised
-
-
-
-        v = np.array([1, 0, 0, 1])
-        c = np.array([.7, .7, .7, 1.0])
-        cross = vector4.create(*self.last_rot_quat.cross(v))
-        # cross = np.array(vector4.normalize(cross) )
-
-
+        q = npq.from_spherical_coords([np.pi/2, 0]).inverse() * \
+            npq.from_spherical_coords([np.pi/2, -dy/180]) * \
+            npq.from_spherical_coords([dx/180, 0])
+        s_.qlast = s_.qcurrent * q
+        s_.updateModel(s_.qlast)
 
         # print(cross)
+        s_.sendData()
 
-
-        # print("x: {:.1f},  y: {:.1f}, z {:.1f}; ".format(*dott))
-
-        # glBufferSubData(GL_ARRAY_BUFFER, 4672 +(4)*16 , 16, np.array(-1 * cross, dtype=np.float32))
-        glBufferSubData(GL_ARRAY_BUFFER, 4672 +(6)*16 , 16, np.array(cross, dtype=np.float32))
-        self.model = matrix44.create_from_quaternion(self.last_rot_quat)
-
-        self.sendData()
-
-    def callbackMouseButton(self, window, button, action, mods):
-        if action == glfw.PRESS:
+    def callbackMouseButton(s_, window, button, action, mods):
+        if action == PRESS:
             if button == 0:
-                self.d = 0
+                s_.d = 0
             elif button == 1:
-                self.d = 1
+                s_.d = 1
             else:
                 return
 
-            glfw.set_cursor_pos_callback(window, self.callbackMousePos)
+            set_cursor_pos_callback(window, s_.callbackMousePos)
 
-        if action == glfw.RELEASE and (button == 0 or button == 1):
-            self.lastx, self.lasty, self.dx, self.dy = None, None, None, None
-            glfw.set_cursor_pos_callback(window, lambda *_: None)
+        if action == RELEASE and (button == 0 or button == 1):
+            s_.lastx, s_.lasty, s_.dx, s_.dy = None, None, None, None
+            set_cursor_pos_callback(window, lambda *_: None)
+            s_.qcurrent = s_.qlast
 
 
-    def callbackScroll(self, window, xoffset, yoffset):
+    def callbackScroll(s_, window, xoffset, yoffset):
         d = 2.0
-        zoom = self.zoom - d * yoffset
+        zoom = s_.zoom - d * yoffset
         if zoom < 180.0 - d and zoom > d:
-            self.zoom = zoom
+            s_.zoom = zoom
 
-        self.updateProj()
-        self.sendData()
+        s_.updateProj()
+        s_.sendData()
