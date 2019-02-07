@@ -5,8 +5,6 @@ from glfw import *
 from OpenGL.GL import *
 
 
-
-
 class MoViPro:
     zoom = 60
     dscroll = 1
@@ -67,7 +65,7 @@ class MoViPro:
         glUniformMatrix4fv(3, 1, GL_FALSE, s_.proj)
 
 
-    def callbackMousePos(s_, window, xpos, ypos):
+    def callback_mouse_pos(s_, window, xpos, ypos):
         rad = 3.14159 / 180.0
         w, h = get_window_size(window)
         cw, ch = w / 2, h / 2
@@ -98,7 +96,7 @@ class MoViPro:
         # print(cross)
         s_.sendData()
 
-    def callbackMouseButton(s_, window, button, action, mods):
+    def callback_mouse_button(s_, window, button, action, mods):
         if action == PRESS:
             if button == 0:
                 s_.d = 0
@@ -107,15 +105,14 @@ class MoViPro:
             else:
                 return
 
-            set_cursor_pos_callback(window, s_.callbackMousePos)
+            set_cursor_pos_callback(window, s_.callback_mouse_pos)
 
         if action == RELEASE and (button == 0 or button == 1):
             s_.lastx, s_.lasty, s_.dx, s_.dy = None, None, None, None
             set_cursor_pos_callback(window, lambda *_: None)
             s_.qcurrent = s_.qlast
 
-
-    def callbackScroll(s_, window, xoffset, yoffset):
+    def callback_scroll(s_, window, xoffset, yoffset):
         d = 2.0
         zoom = s_.zoom - d * yoffset
         if zoom < 180.0 - d and zoom > d:
