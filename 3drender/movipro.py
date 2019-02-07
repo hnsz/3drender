@@ -1,4 +1,4 @@
-import pyrr
+from pyrr.matrix44 import create_perspective_projection
 import numpy as np
 import quaternion as npq
 from glfw import *
@@ -24,20 +24,36 @@ class MoViPro:
 
     def __init__(s_):
         s_.qcurrent = npq.from_spherical_coords(np.array([0, 0]))
-        s_.trans = pyrr.matrix44.create_from_translation(pyrr.vector3.create(2.0, 0.0, 0.0, dtype=np.float32))
-        s_.model = pyrr.matrix44.create_identity()
-        s_.eye = pyrr.vector3.create(0.0, 1.0, 6.0, dtype=np.float32)
-        s_.target = pyrr.vector3.create(0.0, 0.0, 0.0, dtype=np.float32)
-        s_.up = pyrr.vector3.create(0.0, 10.0, 0.0, dtype=np.float32)
+        s_.trans = np.array([1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1])
+        s_.model = np.identity(4)
+        print(s_.model)
+        s_.eye = np.array([0.0, 1.0, 6.0], dtype=np.float32)
+        s_.target = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+        s_.up = np.array([0.0, 1.0, 0.0], dtype=np.float32)
         s_.updateModel(s_.qcurrent)
         s_.updateView()
         s_.updateProj()
 
-    def updateView(s):
-        s.view = pyrr.matrix44.create_look_at(s.eye, s.target, s.up)
+    def updateView(s_):
+        s_.view= s_.constructView(s_.eye, s_.target, s_.up)
+
+    def constructView(s_, eye, target, up):
+        def normalise(v):
+            norm = np.linalg.norm(v)
+            return v / norm if norm else v
+
+        zaxis = normalise(eye - target)
+        xaxis = normalise(np.cross(up, zaxis))
+        yaxis = np.cross(zaxis, xaxis)
+        dots = [-eye @ xaxis, -eye @ yaxis, -eye @ zaxis, 1]
+
+        part = np.vstack((xaxis, yaxis, zaxis, [0,0,0]))
+        view = np.vstack((part.transpose(), dots))
+        return np.array(view, dtype=np.float32)
+
 
     def updateProj(s_):
-        s_.proj = pyrr.matrix44.create_perspective_projection(s_.zoom, s_.width / s_.height, 0.1, 80.0, dtype=np.float32)
+        s_.proj = create_perspective_projection(s_.zoom, s_.width / s_.height, 0.1, 80.0, dtype=np.float32)
 
     def updateModel(s_, q):
         m3 = npq.as_rotation_matrix(q)
