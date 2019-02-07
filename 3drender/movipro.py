@@ -26,7 +26,6 @@ class MoViPro:
         s_.qcurrent = npq.from_spherical_coords(np.array([0, 0]))
         s_.trans = np.array([1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1])
         s_.model = np.identity(4)
-        print(s_.model)
         s_.eye = np.array([0.0, 1.0, 6.0], dtype=np.float32)
         s_.target = np.array([0.0, 0.0, 0.0], dtype=np.float32)
         s_.up = np.array([0.0, 1.0, 0.0], dtype=np.float32)
