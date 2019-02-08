@@ -10,7 +10,7 @@ class Pipeline:
     def __init__(s, shape, frameGrabber):
         s.shape = shape
         s.mvp = MoViPro()
-        s.width, s.height = 1280, 960
+        s.width, s.height = 1080, 720
         s.window = s.initGlfw()
         s.program = gl.glCreateProgram()
         s.frameGrabber = frameGrabber
@@ -148,8 +148,8 @@ class Pipeline:
         info["monitor pos"] = glfw.get_monitor_pos(mon)
         info["display mode"] = glfw.get_video_mode(mon)
 
-        for k in info.keys():
-            print("{0}, {1}".format(k, info[k]))
+        # for k in info.keys():
+        #     print("{0}, {1}".format(k, info[k]))
 
 
 
