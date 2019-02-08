@@ -44,7 +44,7 @@ class Shape:
     def initData(self):
         ry = m4.create_from_y_rotation
 
-        pt = np.array([0, 1, 1, 1])
+        pt = np.array([0, 1, 2, 1])
         half = np.array([
             pt,
             ry(np.pi/5) @ pt,
@@ -55,7 +55,7 @@ class Shape:
 
         frst = np.vstack((half, half @ ry(np.pi)))
         scnd = frst @ ry(-np.pi/10) + [0, -0.5, 0, 0]
-        thrd = frst @ ry(-np.pi/10*2) + [0, -1.0, 0, 0]
+        thrd = (frst @ ry(-np.pi/10*2) + [0, -1.0, 0, 0])
         frth = frst @ ry(-np.pi/10*3) + [0, -1.5, 0, 0]
         ffth = frst @ ry(-np.pi/10*4) + [0, -2.0, 0, 0]
 
@@ -72,12 +72,12 @@ class Shape:
         )
 
         start_color = [0, 0, 0]
-        end_color = np.array([np.pi, np.pi, np.pi])
-
+        end_color = np.array([np.pi, np.pi, np.pi]) * [100, 50, 32]
+        end_color = np.array([np.pi, np.pi, np.pi]) * [50, 50, 50]
         colors3 = np.vstack(
             ([0, 0, 0],
-             np.cos(np.linspace(start_color, end_color * [2, 2, 2] * 5, 50)),
-             [0, 0, 0])
+             np.cos(np.linspace(start_color, end_color, 50)),
+             [1, 1, 1])
         )
 
         colors4 = np.hstack(
@@ -102,7 +102,6 @@ class Shape:
             (shape, lines)
         )
 
-
         self.vertex_buffer = np.array(buffer, dtype=np.float32)
 
         grid = np.mgrid[0:20:10, 1:41]
@@ -118,7 +117,6 @@ class Shape:
                 np.arange(52, 58, 1))
             )
 
-        print(vertices[0])
 
         self.index_buffer = np.array(indices, dtype=np.uint32)
 
