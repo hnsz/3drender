@@ -1,8 +1,8 @@
-import os
 from builtins import OSError, RuntimeError
 import glfw
 import OpenGL.GL as gl
 from movipro import MoViPro
+import numpy as np
 
 class Pipeline:
 
@@ -10,13 +10,14 @@ class Pipeline:
     def __init__(s, shape, frameGrabber):
         s.shape = shape
         s.mvp = MoViPro()
-        s.width, s.height = 1280, 960
+        s.width, s.height = 1080, 720
         s.window = s.initGlfw()
         s.program = gl.glCreateProgram()
         s.frameGrabber = frameGrabber
 
     def run(s):
         window = s.window
+        s.printInfo(window)
         ##   main event loop  ##
         while not glfw.window_should_close(window):
             if glfw.get_key(window, glfw.KEY_Q) == glfw.PRESS:
@@ -53,14 +54,11 @@ class Pipeline:
             glfw.terminate()
             raise RuntimeError("glfw could not create a window")
 
-
         glfw.make_context_current(window)
         glfw.set_window_size_callback(window, s.callbackResize)
-        glfw.set_mouse_button_callback(window, s.mvp.callbackMouseButton)
-        glfw.set_scroll_callback(window, s.mvp.callbackScroll)
+        glfw.set_mouse_button_callback(window, s.mvp.callback_mouse_button)
+        glfw.set_scroll_callback(window, s.mvp.callback_scroll)
 
-
-        s.printInfo(window)
         return window
 
     def render(s):
@@ -71,8 +69,10 @@ class Pipeline:
     def initGl(s):
         voa = gl.glGenVertexArrays(1)
         gl.glBindVertexArray(voa)
+
         vbo = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_ARRAY_BUFFER, vbo)
+
         ibo = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ibo)
 
@@ -89,6 +89,7 @@ class Pipeline:
 
         if s.frameGrabber:
             s.frameGrabber.setupBuffers()
+
         s.shape.setupBuffers()
         s.shape.settings()
 
@@ -146,17 +147,9 @@ class Pipeline:
         info["monitor physical size"] = glfw.get_monitor_physical_size(mon)
         info["monitor pos"] = glfw.get_monitor_pos(mon)
         info["display mode"] = glfw.get_video_mode(mon)
-        for k in info.keys():
-            print("{0}, {1}".format(k, info[k]))
+
+        # for k in info.keys():
+        #     print("{0}, {1}".format(k, info[k]))
 
 
 
-    def debugInfo(s):
-        getinteger = {
-            gl.GL_READ_FRAMEBUFFER_BINDING: gl.GL_READ_FRAMEBUFFER_BINDING,
-            gl.GL_PIXEL_PACK_BUFFER_BINDING: gl.GL_PIXEL_PACK_BUFFER_BINDING,
-            gl.GL_COPY_READ_BUFFER_BINDING: gl.GL_COPY_READ_BUFFER_BINDING,
-        }
-
-        for k in getinteger.keys():
-            print("{0}: {1}".format(k, gl.glGetInteger(getinteger[k])))
