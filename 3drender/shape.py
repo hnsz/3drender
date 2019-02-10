@@ -1,8 +1,6 @@
 import ctypes
-from math import *
 from OpenGL.GL import *
 import numpy as np
-from pyrr import matrix44 as m4
 
 np.set_printoptions(formatter={'float': lambda f: "{:.1f}".format(f)})
 
@@ -48,7 +46,7 @@ class Shape:
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, self.index_buffer.nbytes, self.index_buffer, GL_STATIC_DRAW)
 
     def initData(self):
-        ry = m4.create_from_y_rotation
+        ry = lambda t: np.array([np.cos(t),0,np.sin(t),0, 0,1,0,0, -np.sin(t),0,np.cos(t),0, 0,0,0,1]).reshape(4,4)
 
         pt = np.array([0, 1.5, 1.5, 1])
         half = np.array([
