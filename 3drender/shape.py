@@ -20,8 +20,9 @@ class Shape:
         glDepthFunc(GL_LEQUAL)
         glEnable(GL_BLEND)
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        # glEnable(GL_CULL_FACE)
-        # glCullFace(GL_BACK)
+        glEnable(GL_CULL_FACE)
+        glCullFace(GL_BACK)
+        pass
 
     def draw(self):
         glDrawArrays(GL_TRIANGLE_FAN, 0, 13)
@@ -83,16 +84,16 @@ class Shape:
         strip4[1::2] = strip4[1::2] @ scale(1.5, 1, 1.5)
 
         fantop = np.vstack (([0, 1.3, 0, 1], strip1[::2]))
-        fanbtm = np.vstack (([0, -1.3, 0, 1], strip4[1::2]))
+        fanbtm = np.vstack (([0, -1.3, 0, 1], strip4[::-2]))
 
 
 
         lines = np.array([
-            [-4, 0, 0, 1],  [.4, .4, .4, 1],
-            [4, 0, 0, 1],   [1, 1, 1, 1],
-            [0, 0, 0, 1],  [1, .5, .9, 1],
+            [4, 0, 0, 1],  [.4, .4, .4, 1],
+            [-4, 0, 0, 1],   [1, 1, 1, 1],
+            [0, -4, 0, 1],  [1, .5, .9, 1],
             [0, 4, 0, 1],   [1, 1, 1, 1],
-            [0, 0, -2, 1],  [.4, .4, .4, 1],
+            [0, 0, -4, 1],  [.4, .4, .4, 1],
             [0, 0, 4, 1],   [1, 1, 1, 1],
         ]).reshape(6, 8)
 

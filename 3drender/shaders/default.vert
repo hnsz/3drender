@@ -7,15 +7,8 @@ layout(location=2) uniform mat4 view;
 layout(location=3) uniform mat4 proj;
 layout(location=4) uniform vec4 quater;
 
-void main() {
-    vec4 p = position;
-    vec4 g;
-    float s = abs(p.y) ;
-    if (false && s >= 0.5)
-        g = vec4(p.x * s, p.y, p.z * s, p.w);
-    else
-        g = p;
-
-	gl_Position = proj * view * model * g;
+void main()
+{
+    gl_Position =  proj * view *  model * position;
 	v_color = color;
 }

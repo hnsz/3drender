@@ -14,7 +14,7 @@ class Pipeline:
         s.width, s.height = 1280, 960
         s.window = s.initGlfw()
         s.program = gl.glCreateProgram()
-        s.frameGrab = FrameGrab()
+
 
     def run(s):
         window = s.window
@@ -26,11 +26,11 @@ class Pipeline:
             s.render()
 
             glfw.swap_buffers(window)
-            s.frameGrab.create()
+
             glfw.poll_events()
 
         glfw.terminate()
-        s.frameGrab.finish()
+
 
     def initGlfw(s):
 
@@ -75,7 +75,7 @@ class Pipeline:
         ibo = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ibo)
 
-        pbo = gl.glGenBuffers(2)
+
 
         tex = gl.glGenTextures(1)
         gl.glBindTexture(gl.GL_TEXTURE_2D, tex)
@@ -84,7 +84,7 @@ class Pipeline:
         s.linkProgram()
         gl.glUseProgram(s.program)
 
-        s.frameGrab.setupBuffers(pbo)
+
         s.shape.setupBuffers()
         s.shape.settings()
 

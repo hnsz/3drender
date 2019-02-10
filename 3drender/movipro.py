@@ -1,4 +1,3 @@
-from pyrr.matrix44 import create_perspective_projection
 import numpy as np
 import quaternion as npq
 from glfw import *
@@ -8,7 +7,7 @@ from OpenGL.GL import *
 
 
 class MoViPro:
-    zoom = 60
+    zoom = 0.3
     dscroll = 1
     trans = None
     view = None
@@ -26,8 +25,8 @@ class MoViPro:
         s_.qcurrent = npq.from_spherical_coords(np.array([0, 0]))
         s_.trans = np.array([1, 0, 0, 0,  0, 1, 0, 0,  0, 0, 1, 0,  0, 0, 0, 1])
         s_.model = np.identity(4)
-        s_.eye = np.array([0.0, 1.0, 6.0], dtype=np.float32)
-        s_.target = np.array([0.0, 0.0, 0.0], dtype=np.float32)
+        s_.eye = np.array([0.0, .0, 5.0], dtype=np.float32)
+        s_.target = np.array([.0, 0.0, 0.0], dtype=np.float32)
         s_.up = np.array([0.0, 1.0, 0.0], dtype=np.float32)
         s_.updateModel(s_.qcurrent)
         s_.updateView()
@@ -44,15 +43,29 @@ class MoViPro:
         zaxis = normalise(eye - target)
         xaxis = normalise(np.cross(up, zaxis))
         yaxis = np.cross(zaxis, xaxis)
-        dots = [-eye @ xaxis, -eye @ yaxis, -eye @ zaxis, 1]
+        dots = [-xaxis.dot(eye), -yaxis.dot(eye), -zaxis.dot(eye), 1]
+
 
         part = np.vstack((xaxis, yaxis, zaxis, [0,0,0]))
         view = np.vstack((part.transpose(), dots))
+
         return np.array(view, dtype=np.float32)
 
-
     def updateProj(s_):
-        s_.proj = create_perspective_projection(s_.zoom, s_.width / s_.height, 0.1, 80.0, dtype=np.float32)
+        args = np.pi/3 * s_.zoom, s_.width / s_.height, np.linalg.norm(s_.eye - s_.target), 50
+        s_.proj = s_.constructPerspective(*args)
+
+    def constructPerspective(s_, fovy, ar, near, far):
+        tangent = np.tan(fovy / 2.0)
+        matrix = np.array([
+            [1/(ar * tangent), 0, 0, 0],
+            [0, 1/tangent, 0, 0],
+            [0, 0, (-near - far)/(near - far), (2 * far * near)/(near - far)],
+            [0, 0, 1, 0]
+        ], dtype=np.float32)
+
+        return matrix
+
 
     def updateModel(s_, q):
         m3 = npq.as_rotation_matrix(q)
@@ -116,10 +129,10 @@ class MoViPro:
 
 
     def callbackScroll(s_, window, xoffset, yoffset):
-        d = 2.0
-        zoom = s_.zoom - d * yoffset
-        if zoom < 180.0 - d and zoom > d:
-            s_.zoom = zoom
+        d = 2.1
+        zoomPercentage = (s_.zoom *100) - d * yoffset
+        if zoomPercentage < 100 - d and zoomPercentage > d:
+            s_.zoom = zoomPercentage/100
 
         s_.updateProj()
         s_.sendData()
