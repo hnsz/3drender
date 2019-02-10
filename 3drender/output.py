@@ -9,7 +9,7 @@ from OpenGL.GL import *
 from PIL import Image
 
 
-class FrameGrab:
+class FrameGrabber:
     fileExt = 'tiff'
     destDir = 'assets'
     count = 0
@@ -28,7 +28,7 @@ class FrameGrab:
         s.fileWriter = FileWriter(s.destDir)
 
 
-    def create(s):
+    def saveFrame(s):
         s.idx = (s.idx + 1) % 2
         s.nextIdx = (s.idx + 1) % 2
 
@@ -58,14 +58,15 @@ class FrameGrab:
     def toVideo(s):
         return
 
-    def setupBuffers(s, pbo):
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo[0])
+    def setPBO(s, pbo):
+        s.pbo = pbo
+
+    def setupBuffers(s):
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, s.pbo[0])
         glBufferData(GL_PIXEL_PACK_BUFFER, s.bufferSize , None, GL_STREAM_READ)
-        glBindBuffer(GL_PIXEL_PACK_BUFFER, pbo[1])
+        glBindBuffer(GL_PIXEL_PACK_BUFFER, s.pbo[1])
         glBufferData(GL_PIXEL_PACK_BUFFER, s.bufferSize , None, GL_STREAM_READ)
         glBindBuffer(GL_PIXEL_PACK_BUFFER, 0)
-
-        s.pbo = pbo
 
     def finish(s):
         s.fileWriter.finish()
@@ -142,7 +143,6 @@ class Consumer(Thread):
                 sleeptime = .5 / math.exp(s.q.qsize()/50)
                 time.sleep(sleeptime)
 
-            print("queue size: {:d}".format(s.q.qsize()))
             if not s.q.empty():
                 img, filename, ext = s.q.get()
                 if not img:

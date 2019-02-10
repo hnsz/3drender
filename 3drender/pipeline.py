@@ -3,18 +3,17 @@ from builtins import OSError, RuntimeError
 import glfw
 import OpenGL.GL as gl
 from movipro import MoViPro
-from output import FrameGrab
 
 class Pipeline:
 
 
-    def __init__(s, shape):
+    def __init__(s, shape, frameGrabber):
         s.shape = shape
         s.mvp = MoViPro()
         s.width, s.height = 1280, 960
         s.window = s.initGlfw()
         s.program = gl.glCreateProgram()
-
+        s.frameGrabber = frameGrabber
 
     def run(s):
         window = s.window
@@ -26,6 +25,8 @@ class Pipeline:
             s.render()
 
             glfw.swap_buffers(window)
+            if s.frameGrabber:
+                s.frameGrabber.saveFrame()
 
             glfw.poll_events()
 
@@ -75,7 +76,9 @@ class Pipeline:
         ibo = gl.glGenBuffers(1)
         gl.glBindBuffer(gl.GL_ELEMENT_ARRAY_BUFFER, ibo)
 
-
+        if s.frameGrabber:
+            pbo = gl.glGenBuffers(2)
+            s.frameGrabber.setPBO(pbo)
 
         tex = gl.glGenTextures(1)
         gl.glBindTexture(gl.GL_TEXTURE_2D, tex)
@@ -84,7 +87,8 @@ class Pipeline:
         s.linkProgram()
         gl.glUseProgram(s.program)
 
-
+        if s.frameGrabber:
+            s.frameGrabber.setupBuffers()
         s.shape.setupBuffers()
         s.shape.settings()
 
@@ -156,7 +160,3 @@ class Pipeline:
 
         for k in getinteger.keys():
             print("{0}: {1}".format(k, gl.glGetInteger(getinteger[k])))
-
-    def quit(s):
-        glfw.terminate()
-        os.sys.exit()
