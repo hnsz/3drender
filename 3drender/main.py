@@ -6,15 +6,15 @@ import numpy
 
 print("Numpy: {:s}".format(numpy.__version__))
 
-fg = FrameGrabber()
+# fg = FrameGrabber()
 shape = Shape()
-pipeline = Pipeline(shape, fg)
-pipeline.loadShaderFile('shaders/illumination.vert', gl.GL_VERTEX_SHADER)
-pipeline.loadShaderFile('shaders/illumination.frag', gl.GL_FRAGMENT_SHADER)
+pipeline = Pipeline(shape, None)
+pipeline.loadShaderFile('shaders/diffuse.vert', gl.GL_VERTEX_SHADER)
+pipeline.loadShaderFile('shaders/diffuse.frag', gl.GL_FRAGMENT_SHADER)
 pipeline.initGl()
 pipeline.sendData()
 
 
 pipeline.run()
 
-fg.finish()
+# fg.finish()
