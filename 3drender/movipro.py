@@ -52,7 +52,7 @@ class MoViPro:
         return np.array(view, dtype=np.float32)
 
     def updateProj(s_):
-        args = np.pi/3 * s_.zoom, s_.width / s_.height, np.linalg.norm(s_.eye - s_.target), 50
+        args = np.pi/3 * s_.zoom, s_.width / s_.height, np.linalg.norm(s_.eye - s_.target)+1, 50
         s_.proj = s_.constructPerspective(*args)
 
     def constructPerspective(s_, fovy, ar, near, far):
@@ -127,9 +127,9 @@ class MoViPro:
             s_.qcurrent = s_.qlast
 
     def callback_scroll(s_, window, xoffset, yoffset):
-        d = 2.0
+        d = 2.0/100
         zoom = s_.zoom - d * yoffset
-        if zoom < 180.0 - d and zoom > d:
+        if zoom < 1.0 - d and zoom > d:
             s_.zoom = zoom
 
         s_.updateProj()
