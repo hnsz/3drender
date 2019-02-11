@@ -1,11 +1,11 @@
 from builtins import OSError, RuntimeError
-import glfw
+from glfw import *
 import OpenGL.GL as gl
 from movipro import MoViPro
 import numpy as np
 
-class Pipeline:
 
+class Pipeline:
 
     def __init__(s, shape, frameGrabber):
         s.shape = shape
@@ -18,46 +18,46 @@ class Pipeline:
     def run(s):
         window = s.window
         s.printInfo(window)
-        ##   main event loop  ##
-        while not glfw.window_should_close(window):
-            if glfw.get_key(window, glfw.KEY_Q) == glfw.PRESS:
+
+        #   main event loop
+        while not window_should_close(window):
+            if get_key(window, KEY_Q) == PRESS:
                 break
 
             s.render()
 
-            glfw.swap_buffers(window)
+            swap_buffers(window)
             if s.frameGrabber:
                 s.frameGrabber.saveFrame()
 
-            glfw.poll_events()
+            poll_events()
 
-        glfw.terminate()
-
+        terminate()
 
     def initGlfw(s):
 
-        if not glfw.init():
+        if not init():
             raise RuntimeError("glfw didn't initialise.")
 
-        glfw.window_hint(glfw.VISIBLE, gl.GL_TRUE)
-        glfw.window_hint(glfw.CONTEXT_VERSION_MAJOR, 4)
-        glfw.window_hint(glfw.CONTEXT_VERSION_MINOR, 5)
-        glfw.window_hint(glfw.OPENGL_DEBUG_CONTEXT, gl.GL_TRUE)
-        glfw.window_hint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-        glfw.window_hint(glfw.OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
-        glfw.window_hint(glfw.DOUBLEBUFFER, gl.GL_TRUE)
+        window_hint(VISIBLE, gl.GL_TRUE)
+        window_hint(CONTEXT_VERSION_MAJOR, 4)
+        window_hint(CONTEXT_VERSION_MINOR, 5)
+        window_hint(OPENGL_DEBUG_CONTEXT, gl.GL_TRUE)
+        window_hint(OPENGL_PROFILE, OPENGL_CORE_PROFILE)
+        window_hint(OPENGL_FORWARD_COMPAT, gl.GL_TRUE)
+        window_hint(DOUBLEBUFFER, gl.GL_TRUE)
 
-        window = glfw.create_window(s.width, s.height, "3d Rendering", None, None)
-        glfw.set_window_pos(window, 0, 0)
+        window = create_window(s.width, s.height, "3d Rendering", None, None)
+        set_window_pos(window, 0, 0)
 
         if not window:
-            glfw.terminate()
+            terminate()
             raise RuntimeError("glfw could not create a window")
 
-        glfw.make_context_current(window)
-        glfw.set_window_size_callback(window, s.callbackResize)
-        glfw.set_mouse_button_callback(window, s.mvp.callback_mouse_button)
-        glfw.set_scroll_callback(window, s.mvp.callback_scroll)
+        make_context_current(window)
+        set_window_size_callback(window, s.callbackResize)
+        set_mouse_button_callback(window, s.mvp.callback_mouse_button)
+        set_scroll_callback(window, s.mvp.callback_scroll)
 
         return window
 
@@ -97,7 +97,6 @@ class Pipeline:
         s.shape.sendData()
         s.mvp.sendData()
 
-
     def loadShaderFile(s, path, shader_type):
         try:
             fh = open(path, "r")
@@ -132,24 +131,20 @@ class Pipeline:
             gl.glDeleteShader(shdr)
 
     def callbackResize(s, window, width, height):
-        glfw.set_window_aspect_ratio(window, width, height)
+        set_window_aspect_ratio(window, width, height)
         gl.glViewport(0, 0, width, height)
-
 
     def printInfo(s, window):
         #   debug info
         info = {}
-        info["glfw ver:"] = glfw.get_version_string()
+        info["glfw ver:"] = get_version_string()
         info["glsl ver:"] = gl.glGetString(gl.GL_SHADING_LANGUAGE_VERSION)
-        info["fb size"] = glfw.get_framebuffer_size(window)
-        info["window size"] = glfw.get_window_size(window)
-        mon = glfw.get_primary_monitor()
-        info["monitor physical size"] = glfw.get_monitor_physical_size(mon)
-        info["monitor pos"] = glfw.get_monitor_pos(mon)
-        info["display mode"] = glfw.get_video_mode(mon)
+        info["fb size"] = get_framebuffer_size(window)
+        info["window size"] = get_window_size(window)
+        mon = get_primary_monitor()
+        info["monitor physical size"] = get_monitor_physical_size(mon)
+        info["monitor pos"] = get_monitor_pos(mon)
+        info["display mode"] = get_video_mode(mon)
 
         # for k in info.keys():
         #     print("{0}, {1}".format(k, info[k]))
-
-
-
