@@ -48,7 +48,7 @@ class Pipeline:
         window_hint(DOUBLEBUFFER, gl.GL_TRUE)
 
         window = create_window(s.width, s.height, "3d Rendering", None, None)
-        set_window_pos(window, 0, 0)
+        set_window_pos(window, 1920 - s.width, 0)
 
         if not window:
             terminate()

@@ -16,7 +16,7 @@ void main() {
 
 
 
-    Light light = {{30.0, 1.0, 10.0}, {.5,.5,.5}, 0.1, .1};
+    Light light = {{-10.0, 20.0, 10.0}, {.5,.5,.5}, 0.1, .1};
 
 
     factor = dot(normalize(v_normal), light.direction);
