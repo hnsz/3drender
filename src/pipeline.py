@@ -1,8 +1,7 @@
 from builtins import OSError, RuntimeError
 from glfw import *
 import OpenGL.GL as gl
-from movipro import MoViPro
-import numpy as np
+from src.movipro import MoViPro
 
 
 class Pipeline:
