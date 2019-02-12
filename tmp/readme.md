@@ -1,0 +1,1 @@
+**For Crap That You Want Near But Not In The Repo**
