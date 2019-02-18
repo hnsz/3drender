@@ -11,7 +11,8 @@ numba = "*"
 glfw = "*"
 numpy = "*"
 PyOpenGL = "*"
-numpy-quaternion = "*"
+pyquaternion = "*"
+
 
 [requires]
 python_version = "3.7"

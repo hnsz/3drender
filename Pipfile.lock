@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "043d144f12ae561a47175a492d0e3b875bf5161ff2c7544018e1d30cb46e25ac"
+            "sha256": "10ab0d682dba8a0c45fb1af02842e9609f5cc98b6e9d0d824c220b7feab878b0"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -100,17 +100,6 @@
             "index": "pypi",
             "version": "==1.16.1"
         },
-        "numpy-quaternion": {
-            "hashes": [
-                "sha256:41705a4b9493d039a428b79956fff21e9f0cfbb92847a63243ebf23d546c6ef7",
-                "sha256:6a02e06b72ceac2b20815693fdeaa7a3582bae9a4590779720b628ce53c22c98",
-                "sha256:95ad8559b16da44480c16cdf6fbf05871b2cea91725fbeae2376fe793c4702bf",
-                "sha256:a27b86b920680fdf9ece173f6ba8338602bbaa3323bb865a3d1cbbbdc33e3a20",
-                "sha256:b7dd06f4aa6eb1c066f6230c7b56278305b85fa0be40e81a981e4c48569930a2"
-            ],
-            "index": "pypi",
-            "version": "==2018.12.24.11.8.55"
-        },
         "pyopengl": {
             "hashes": [
                 "sha256:9b47c5c3a094fa518ca88aeed35ae75834d53e4285512c61879f67a48c94ddaf",
@@ -118,6 +107,15 @@
             ],
             "index": "pypi",
             "version": "==3.1.0"
+        },
+        "pyquaternion": {
+            "hashes": [
+                "sha256:2d89d19259d62a8fbd25219eee7dacc1f6bb570becb70e1e883f622597c7d81d",
+                "sha256:9da8a22375783c1d5f2d65d195b4eb6c1ce2c5a5cab4700860b3bacc4dacb460",
+                "sha256:bac5945d08b9a2f4106dc76206e40f353c7240fdf37a370e13b03113c135f59b"
+            ],
+            "index": "pypi",
+            "version": "==0.9.5"
         },
         "singledispatch": {
             "hashes": [

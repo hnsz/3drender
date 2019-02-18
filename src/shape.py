@@ -135,7 +135,5 @@ class Shape:
                 [61,62,71,70,69,68,67,66,65,64,63,62],
                 # np.arange(12 + 88 + 12, 12 + 88 + 12 + 6)
         ))
-        print(vertices)
-
 
         self.index_buffer = np.array(indices, dtype=np.uint32)

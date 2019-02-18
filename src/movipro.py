@@ -1,5 +1,5 @@
 import numpy as np
-import quaternion as npq
+import pyquaternion as pyq
 from glfw import *
 from OpenGL.GL import *
 
@@ -19,7 +19,7 @@ class MoViPro:
     qlast = None
 
     def __init__(s_):
-        s_.qcurrent = npq.from_spherical_coords(np.array([0, 0]))
+        s_.qcurrent = pyq.Quaternion(.7,0.7,0,0.7)
         s_.trans = np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
         s_.model = np.identity(4)
         s_.eye = np.array([0.0, .0, 5.0], dtype=np.float32)
@@ -63,11 +63,7 @@ class MoViPro:
         return matrix
 
     def updateModel(s_, q):
-        m3 = npq.as_rotation_matrix(q)
-        B = np.mat('0;0;0')
-        C = np.mat('0 0 0')
-        D = np.mat('1')
-        s_.model = np.bmat([[m3, B], [C, D]])
+        s_.model = q.transformation_matrix
 
     def sendData(s_):
         glUniformMatrix4fv(1, 1, GL_FALSE, s_.model)
@@ -96,10 +92,8 @@ class MoViPro:
         dx = (s_.lastx - xpos)
         dy = (s_.lasty - ypos)
 
-        q = npq.from_spherical_coords([np.pi / 2, 0]).inverse() * \
-            npq.from_spherical_coords([np.pi / 2, -dy / 180]) * \
-            npq.from_spherical_coords([dx / 180, 0])
-        s_.qlast = s_.qcurrent * q
+        q = pyq.Quaternion(1, np.cos(np.pi/180 * dx), 1, -np.sin(np.pi/180 *dy))
+        s_.qlast = q * s_.qcurrent * q.inverse
         s_.updateModel(s_.qlast)
 
         s_.sendData()
