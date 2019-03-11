@@ -3,6 +3,8 @@ import pyquaternion as pyq
 from glfw import *
 from OpenGL.GL import *
 
+from trackball import Trackball
+
 
 class MoViPro:
     zoom = 0.3
@@ -10,8 +12,7 @@ class MoViPro:
     trans = None
     view = None
     proj = None
-    lastx = None
-    lasty = None
+    trackball = None
     width, height = 1080, 720
     centerPoint = width / 2, height / 2
     q0 = None
@@ -19,7 +20,9 @@ class MoViPro:
     qlast = None
 
     def __init__(s_):
-        s_.qcurrent = pyq.Quaternion(.7,0.7,0,0.7)
+        s_.q0 = pyq.Quaternion()
+        s_.qcurrent = pyq.Quaternion()
+        s_.qlast = s_.qcurrent
         s_.trans = np.array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1])
         s_.model = np.identity(4)
         s_.eye = np.array([0.0, .0, 5.0], dtype=np.float32)
@@ -71,35 +74,28 @@ class MoViPro:
         glUniformMatrix4fv(3, 1, GL_FALSE, s_.proj)
 
     def callback_mouse_pos(s_, window, xpos, ypos):
-        rad = 3.14159 / 180.0
+
         w, h = get_window_size(window)
-        cw, ch = w / 2, h / 2
-        co, si = (xpos - cw) / cw, (ypos - ch) / ch
 
-        if s_.lastx == None or s_.lasty == None:
-            s_.lastx, s_.lasty = xpos, ypos
-            return
+        center_x, center_y = w / 2.0, h / 2.0
 
-        if s_.d == 0:
-            dx = (s_.lastx - xpos)
-        else:
-            dx = 0
-        if s_.d == 1:
-            dy = (s_.lasty - ypos)
-        else:
-            dy = 0
+        if s_.trackball == None:
+            s_.trackball = Trackball(xpos, ypos, h/2.0, center_x, center_y)
 
-        dx = (s_.lastx - xpos)
-        dy = (s_.lasty - ypos)
+        s_.trackball.setTo(xpos, ypos)
 
-        q = pyq.Quaternion(1, np.cos(np.pi/180 * dx), 1, -np.sin(np.pi/180 *dy))
-        s_.qlast = q * s_.qcurrent * q.inverse
-        s_.updateModel(s_.qlast)
+        q = s_.trackball.getRotation()
+
+        trans = s_.qcurrent * q
+        s_.qlast = trans
+        s_.updateModel(trans * s_.q0 * trans.conjugate)
 
         s_.sendData()
 
     def callback_mouse_button(s_, window, button, action, mods):
         if action == PRESS:
+            s_.trackball = None
+            s_.qcurrent = s_.qlast
             if button == 0:
                 s_.d = 0
             elif button == 1:
@@ -110,9 +106,8 @@ class MoViPro:
             set_cursor_pos_callback(window, s_.callback_mouse_pos)
 
         if action == RELEASE and (button == 0 or button == 1):
-            s_.lastx, s_.lasty, s_.dx, s_.dy = None, None, None, None
             set_cursor_pos_callback(window, lambda *_: None)
-            s_.qcurrent = s_.qlast
+
 
     def callback_scroll(s_, window, xoffset, yoffset):
         d = 2.0 / 100
