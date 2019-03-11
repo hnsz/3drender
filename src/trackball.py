@@ -22,6 +22,7 @@ class Trackball:
         to = self.to_pos
         r = (fr[0] * to[0]) + (fr[1] * to[1]) + (fr[2] * to[2])
 
+        # cross product, kan simpler
         i = (fr[1] * to[2]) - (to[1] * fr[2])
         j = (fr[2] * to[0]) - (to[2] * fr[0])
         k = (fr[0] * to[1]) - (to[0] * fr[1])
@@ -48,6 +49,5 @@ class Trackball:
             sphere_z = -math.sqrt(1 - magnitude)
 
         sphere_w = 0.0
-
 
         return (sphere_x, sphere_y, sphere_z, sphere_w)
